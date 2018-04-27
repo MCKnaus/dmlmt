@@ -126,3 +126,6 @@ Chernozhukov, V., Chetverikov, D., Demirer, M., Duflo, E., Hansen, C., Newey, W.
 Chernozhukov, V., Hansen, C., & Spindler, M. (2016). 3High-Dimensional Metrics in R3. [arXiv:1603.01700](https://arxiv.org/abs/1603.01700)
 
 Farrell, M. H. (2015). Robust inference on average treatment effects with possibly more covariates than observations. *Journal of Econometrics*, 189(1), 1-23.
+
+Knaus, M. C. (2018). A Double Machine Learning Approach to Estimate the Effects of Musical Practice on
+Student's Skills, in preparation.
