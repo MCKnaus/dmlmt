@@ -1,0 +1,12 @@
+Package: dmlmt
+Type: Package
+Title: Double Machine Learning for Multiple Treatments
+Version: 0.1.0
+Author: Michael C. Knaus
+Maintainer: Michael C. Knaus <michael.knaus@unisg.ch>
+Description: This code implements the Double Machine Learning approach (Chernozhukov et al., 2018) for multiple treatments following Farrell (2015). With modifications for sensitivity analysis and balancing checks as described and applied in Knaus (2018). 
+Imports: glmnet, rms, doParallel, doSNOW, RandomFieldsUtils, psych
+License: MIT
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 6.0.1
