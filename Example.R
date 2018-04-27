@@ -1,5 +1,9 @@
-require(hdm)
+# Download current version from Github
+library(devtools)
+install_github(repo="MCKnaus/dmlmt")
 
+# Get data
+library(hdm)
 data(pension)
 Y = pension$tw; D = pension$p401
 # Only main effects
@@ -19,6 +23,7 @@ D_mat <- cbind(1-D,D)
 
 #### Analysis like in the paper
 # Post-Lasso Logit for p(x) (slow)
+library(dmlmt)
 select_d <- post_lasso_cv(X,D,family = "binomial",output=FALSE)$names_pl
 l_nm_d <- list(select_d[-1],select_d[-1])
 gps <- gps_prep(X,D_mat,l_nm_d,cs=TRUE)
@@ -37,7 +42,7 @@ ATE <- TE_dmlmt(PO$mu,gps$cs)
 
 
 #### Alternative: Lasso instead of Post-Lasso for p(x) (substantially faster)
-require(glmnet)
+library(glmnet)
 cvfit = cv.glmnet(X,D, family = "binomial")
 ps_mat <- predict(cvfit, X, s = "lambda.min", type = "response")
 ps_mat <- cbind(1-ps_mat,ps_mat)

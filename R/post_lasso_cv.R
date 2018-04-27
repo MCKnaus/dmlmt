@@ -278,9 +278,6 @@ post_lasso_cv <- function(x,y,w=NULL,kf = 10,family="gaussian", seed=NULL,output
 
 
 fitted_values <- function (XtX_all,Xty_all,x_pred,nm_act) {
-  # if (!require("RandomFieldsUtils",quietly=TRUE)) {
-  #   stop("Package RandomFieldsUtils not installed (required here)!")
-  # }
 
   # Extract relevant rows and columns
   XtX <- XtX_all[nm_act,nm_act]

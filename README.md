@@ -12,9 +12,12 @@ The following example shows for simplicity how the analysis works for a binary t
 The data are taken from the [hdm](https://github.com/cran/hdm) package that is described in Chernozhukov, Hansen, & Spindler (2016).
 
 ```R
-require(hdm)
+# Download current version from Github
+library(devtools)
+install_github(repo="MCKnaus/dmlmt")
 
-# Get pension data from the hdm package
+# Get data
+library(hdm)
 data(pension)
 Y = pension$tw; D = pension$p401
 # Only main effects 

@@ -20,9 +20,6 @@
 #' @export
 
 gps_prep <- function(x,t,nm_list,cs=TRUE,q=1,print=TRUE) {
-  # if (!require("psych",quietly=TRUE)) {
-  #   stop("Package psych not installed (required here)!")
-  # }
 
   # Retrieve important info
   n <- nrow(x)
