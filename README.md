@@ -127,7 +127,7 @@ plot <- love.plot(balance,abs = TRUE, line=TRUE, var.order="unadjusted")
 
 Chernozhukov, V., Chetverikov, D., Demirer, M., Duflo, E., Hansen, C., Newey, W., & Robins, J. (2018). Double/debiased machine learning for treatment and structural parameters. *The Econometrics Journal*, 21(1), C1-C68.
 
-Chernozhukov, V., Hansen, C., & Spindler, M. (2016). 3High-Dimensional Metrics in R3. [arXiv:1603.01700](https://arxiv.org/abs/1603.01700)
+Chernozhukov, V., Hansen, C., & Spindler, M. (2016). *High-Dimensional Metrics in R*. [arXiv:1603.01700](https://arxiv.org/abs/1603.01700)
 
 Farrell, M. H. (2015). Robust inference on average treatment effects with possibly more covariates than observations. *Journal of Econometrics*, 189(1), 1-23.
 
