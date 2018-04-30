@@ -1,6 +1,7 @@
 # Download current version from Github
 library(devtools)
 install_github(repo="MCKnaus/dmlmt")
+library(dmlmt)
 
 # Get data
 library(hdm)

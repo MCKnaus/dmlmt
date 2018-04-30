@@ -15,6 +15,7 @@ The data are taken from the [hdm](https://github.com/cran/hdm) package that is d
 # Download current version from Github
 library(devtools)
 install_github(repo="MCKnaus/dmlmt")
+library(dmlmt)
 
 # Get data
 library(hdm)
