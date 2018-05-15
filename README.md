@@ -62,7 +62,7 @@ stand_l_mult <- dmlmt(X,D_mult,Y,pl=FALSE,parallel=TRUE)
 ```
 
 ### Extended analysis as proposed in Knaus (2018)
-Run the analysis also for 1SE, 0.5SE, 0.5SE+ and 1SE+ rules to select the Lambda.
+Run the analysis also for 1SE, 0.5SE, 0.5SE+ and 1SE+ rules to select the Lambda and calculate the weights for balancing checks.
 
 ```R
 se_rules <- c(-1,-.5,.5,1)
