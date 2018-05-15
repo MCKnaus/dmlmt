@@ -57,8 +57,8 @@ table(D_mult)
 Run the analysis with the multiple treatment.
 
 ```R
-stand_pl_mult <- dmlmt(X,D_mult,Y,parallel=TRUE)
-stand_l_mult <- dmlmt(X,D_mult,Y,pl=FALSE,parallel=TRUE)
+stand_pl_mult <- dmlmt(X,D_mult,Y)
+stand_l_mult <- dmlmt(X,D_mult,Y,pl=FALSE)
 ```
 
 ### Extended analysis as proposed in Knaus (2018)

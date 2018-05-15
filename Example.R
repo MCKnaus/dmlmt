@@ -31,8 +31,8 @@ D_mult[runif(length(D))*(1-D)>0.5] <- 2
 table(D_mult)
 
 # Run the analysis with multiple treatments
-stand_pl_mult <- dmlmt(X,D_mult,Y,parallel=TRUE)
-stand_l_mult <- dmlmt(X,D_mult,Y,pl=FALSE,parallel=TRUE)
+stand_pl_mult <- dmlmt(X,D_mult,Y)
+stand_l_mult <- dmlmt(X,D_mult,Y,pl=FALSE)
 
 
 #################################
