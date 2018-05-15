@@ -42,9 +42,9 @@ post_lasso_cv <- function(x,y,w=NULL,kf = 10,family="gaussian", seed=NULL,output
   lasso_full <- glmnet(x,y,weights = as.vector(w),family=family,...)
   if (output ==  TRUE) {
     print(lasso_full)
-    if (!is.null(graph_file)) png(file = graph_file, units="in", width=7, height=10, res=1000,bg = "transparent")
-    par(mfrow = c(2,1))
-    plot(lasso_full, xvar = "lambda",label=TRUE)
+    if (!is.null(graph_file)) grDevices::png(file = graph_file, units="in", width=7, height=10, res=1000,bg = "transparent")
+    graphics::par(mfrow = c(2,1))
+    graphics::plot(lasso_full, xvar = "lambda",label=TRUE)
   }
 
   coef_lasso_full <- coef(lasso_full)                   # Save coefficients to extract later the ones at the CV minima
@@ -71,8 +71,8 @@ post_lasso_cv <- function(x,y,w=NULL,kf = 10,family="gaussian", seed=NULL,output
   if (!is.null(seed)) {                                  # Use seed if specified
     set.seed(seed)
   }
-  split = runif(nrow(x))
-  cvgroup = as.numeric(cut(split,quantile(split, probs = seq(0,1,1/kf)),include.lowest = TRUE))  # groups for K-fold cv
+  split <- stats::runif(nrow(x))
+  cvgroup <- as.numeric(cut(split,stats::quantile(split, probs = seq(0,1,1/kf)),include.lowest = TRUE))  # groups for K-fold cv
   list <- 1:kf                            # Needed later in the loop to get the appropriate samples
   # table(cvgroup)
 
@@ -85,7 +85,7 @@ post_lasso_cv <- function(x,y,w=NULL,kf = 10,family="gaussian", seed=NULL,output
     if (output ==  TRUE) {
 
       print(paste("Progress of",toString(kf),"fold cross-validation:"))
-      progress.bar <- create_progress_bar("text")
+      progress.bar <- plyr::create_progress_bar("text")
       progress.bar$init(kf)
     }
 
@@ -112,10 +112,10 @@ post_lasso_cv <- function(x,y,w=NULL,kf = 10,family="gaussian", seed=NULL,output
   }  else if (parallel == TRUE)  {
 
     ## Set up cluster of cores
-    n_cores <- min(detectCores(),kf)
+    n_cores <- min(parallel::detectCores(),kf)
 
     if (output ==  TRUE) cat("\n CV parallelized using",toString(n_cores),"cores \n\n")
-    cl <- makeCluster(n_cores)
+    cl <- parallel::makeCluster(n_cores)
     registerDoParallel(cl)
 
     ## Parallelized foreach loop
@@ -207,38 +207,38 @@ post_lasso_cv <- function(x,y,w=NULL,kf = 10,family="gaussian", seed=NULL,output
 
     # Plot mean lines
     ylab <- "Mean-squared Error"
-    plot(xrange,yrange,type="n",xlab="Log Lambda",ylab=ylab)
-    lines(log(lambda),mean_MSE_lasso,lwd=1.5,col="blue")
-    lines(log(lambda),mean_MSE_post_lasso,lwd=1.5,col="red")
+    graphics::plot(xrange,yrange,type="n",xlab="Log Lambda",ylab=ylab)
+    graphics::lines(log(lambda),mean_MSE_lasso,lwd=1.5,col="blue")
+    graphics::lines(log(lambda),mean_MSE_post_lasso,lwd=1.5,col="red")
 
     # Plot upper and lower 1SE lines
-    lines(log(lambda),lasso_1se_up,lty=2,lwd=1,col="blue")
-    lines(log(lambda),lasso_1se_low,lty=2,lwd=1,col="blue")
-    lines(log(lambda),post_lasso_1se_up,lty=2,lwd=1,col="red")
-    lines(log(lambda),post_lasso_1se_low,lty=2,lwd=1,col="red")
+    graphics::lines(log(lambda),lasso_1se_up,lty=2,lwd=1,col="blue")
+    graphics::lines(log(lambda),lasso_1se_low,lty=2,lwd=1,col="blue")
+    graphics::lines(log(lambda),post_lasso_1se_up,lty=2,lwd=1,col="red")
+    graphics::lines(log(lambda),post_lasso_1se_low,lty=2,lwd=1,col="red")
 
     # Show location of minima and 1SE
-    abline(v = log(lambda[ind_min_l]), lty = 1, col="blue")
-    abline(v = log(lambda[ind_min_pl]), lty = 1, col="red")
+    graphics::abline(v = log(lambda[ind_min_l]), lty = 1, col="blue")
+    graphics::abline(v = log(lambda[ind_min_pl]), lty = 1, col="red")
 
     if (is.numeric(se_rule)) {
       for (s in 1:length(se_rule)) {
-        abline(v = log(lambda[ind_Xse_l[s]]), lty = 3, col="blue")
-        abline(v = log(lambda[ind_Xse_pl[s]]), lty = 3, col="red")
+        graphics::abline(v = log(lambda[ind_Xse_l[s]]), lty = 3, col="blue")
+        graphics::abline(v = log(lambda[ind_Xse_pl[s]]), lty = 3, col="red")
       }
     }
 
     # Print legend
-    legend('top',c("Lasso MSE","Lasso MSE?1SE","Post-Lasso MSE","Post-Lasso MSE?1SE","# active coeff."), lty = c(1,2,1,2,1),
+    graphics::legend('top',c("Lasso MSE","Lasso MSE?1SE","Post-Lasso MSE","Post-Lasso MSE?1SE","# active coeff."), lty = c(1,2,1,2,1),
            col=c('blue','blue','red','red','forestgreen'),ncol=1,bty ="n",cex=0.7)
 
     # Open a new graph for number of coefficients to be written on existing
-    par(new = TRUE)
-    plot(log(lambda),num_act, axes=F, xlab=NA, ylab=NA, cex=1.2,type="l",col="forestgreen",lwd=1.5)
-    axis(side = 4)
-    mtext(side = 4, line = 3, "# active coefficients")
+    graphics::par(new = TRUE)
+    graphics::plot(log(lambda),num_act, axes=F, xlab=NA, ylab=NA, cex=1.2,type="l",col="forestgreen",lwd=1.5)
+    graphics::axis(side = 4)
+    graphics::mtext(side = 4, line = 3, "# active coefficients")
 
-    if (!is.null(graph_file)) dev.off()
+    if (!is.null(graph_file)) grDevices::dev.off()
 
     # Comparison of minimum MSE
     cat("\n\n Minimum ",ylab," Lasso:",toString(min(mean_MSE_lasso,na.rm = TRUE)))
@@ -303,12 +303,15 @@ fitted_values <- function (XtX_all,Xty_all,x_pred,nm_act) {
 }
 
 
-#### Function to normalize weights to N or to N in treated and controls separately
+#' Function to normalize weights to N or to N in treated and controls separately
+
+#' @param w vector of weights that should be normalized
+#' @param d vector of treament indicators
+#'
+#' @return Normalized weights
 
 norm_w_to_n <- function(w,d=NULL) {
-  ## Input:  w: vector of weights that should be normalized
-  ##         d: treatment indicator
-  ## Output: w: Normalized weights
+
   if (is.null(d)) {
     ## Normalize weights to sum up to N
     w <- w / sum(w)* nrow(w)
@@ -329,13 +332,14 @@ norm_w_to_n <- function(w,d=NULL) {
 #' This function contains the core parts of the CV for Lasso and Post-Lasso
 
 #' @param x covariate matrix to be used in CV
-#' @param y: vector of outcomes
-#' @param w: vector of weight
-#' @param d: vector of treament indicators
-#' @param cvgroup: categorical with k groups to identify folds
-#' @param list: list 1:k
-#' @param i: number of fold that is used for prediction
-#' @param lambda: series of lambdas used
+#' @param y vector of outcomes
+#' @param w vector of weight
+#' @param d vector of treament indicators
+#' @param cvgroup categorical with k groups to identify folds
+#' @param list list 1:k
+#' @param i number of fold that is used for prediction
+#' @param lambda series of lambdas used
+#' @param family Outcome family, currenlty "gaussian" and "binomial" supported
 #' @param ... Pass \code{\link{glmnet}} options
 #'
 #' @return MSE_lasso / MSE_post_lasso: means squared errors for each lambda
@@ -527,7 +531,14 @@ CV_core <- function(x,y,w,d,cvgroup,list,i,lambda,family,...) {
 
 
 
-#' Function finds the positionfor pre-specified SE rules
+#' Function finds the position for pre-specified SE rules
+#'
+#' @param CV Vector of cross-validated criterion
+#' @param ind_min Index of cross-validated minimum
+#' @param oneSE Standard error of cross-validated criterion at the minimum
+#' @param factor Factor in which direction to go. Negative smaller model, positive larger model
+#'
+#' @return Index on the Lambda grid
 
 find_Xse_ind <- function(CV,ind_min,oneSE,factor) {
   cv_temp <- CV - (CV[ind_min] + abs(factor) * oneSE[ind_min])
@@ -549,6 +560,9 @@ find_Xse_ind <- function(CV,ind_min,oneSE,factor) {
 
 
 #' Adds an intercept to a matrix
+#' @param mat Any matrix
+#'
+#' @return Matrix with intercept
 
 add_intercept <- function(mat) {
   if (is.null(dim(mat))) mat <- as.matrix(mat,ncol=1)

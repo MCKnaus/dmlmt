@@ -5,7 +5,7 @@
 \title{This function checks common support for a user provided matrix of
 (generalized) propensity scores}
 \usage{
-gps_cs(p_mat, t, q = 1, print = TRUE)
+gps_cs(p_mat, t, q = 1, print = TRUE, cs = TRUE)
 }
 \arguments{
 \item{p_mat}{N x # of treatments matrix with (generalized) propensity scores}
@@ -16,6 +16,8 @@ each column contains a binary indicator for each tratment}
 \item{q}{Quantile used for enforcing common support}
 
 \item{print}{If TRUE, descriptives for p-scores and common support shown}
+
+\item{cs}{If TRUE common support enforced, if FALSE only boolean vector added}
 }
 \value{
 \code{gps_cs} returns a list containing a N x # of treatments matrix

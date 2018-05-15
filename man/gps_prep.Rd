@@ -2,7 +2,8 @@
 % Please edit documentation in R/dmlmt.R
 \name{gps_prep}
 \alias{gps_prep}
-\title{Double machine learning for binary and multiple treatment}
+\title{This function prepares the (generalized) propensity scores
+and checks the common support after variable selection.}
 \usage{
 gps_prep(x, t, nm_list, cs = TRUE, q = 1, print = TRUE)
 }

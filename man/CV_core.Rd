@@ -9,21 +9,23 @@ CV_core(x, y, w, d, cvgroup, list, i, lambda, family, ...)
 \arguments{
 \item{x}{covariate matrix to be used in CV}
 
+\item{y}{vector of outcomes}
+
+\item{w}{vector of weight}
+
+\item{d}{vector of treament indicators}
+
+\item{cvgroup}{categorical with k groups to identify folds}
+
+\item{list}{list 1:k}
+
+\item{i}{number of fold that is used for prediction}
+
+\item{lambda}{series of lambdas used}
+
+\item{family}{Outcome family, currenlty "gaussian" and "binomial" supported}
+
 \item{...}{Pass \code{\link{glmnet}} options}
-
-\item{y:}{vector of outcomes}
-
-\item{w:}{vector of weight}
-
-\item{d:}{vector of treament indicators}
-
-\item{cvgroup:}{categorical with k groups to identify folds}
-
-\item{list:}{list 1:k}
-
-\item{i:}{number of fold that is used for prediction}
-
-\item{lambda:}{series of lambdas used}
 }
 \value{
 MSE_lasso / MSE_post_lasso: means squared errors for each lambda

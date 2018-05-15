@@ -6,6 +6,12 @@
 \usage{
 add_intercept(mat)
 }
+\arguments{
+\item{mat}{Any matrix}
+}
+\value{
+Matrix with intercept
+}
 \description{
 Adds an intercept to a matrix
 }

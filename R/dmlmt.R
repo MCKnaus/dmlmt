@@ -1,6 +1,156 @@
-#' Double machine learning for binary and multiple treatment
+#' Double machine learning for binary and multiple treatments'
 #'
 #'
+#' This function estimates treatment effects for binary and multiple treatments
+#' using Double Machine Learning.
+#'
+#' @param x Matrix of covariates (N x p matrix)
+#' @param t Vector of treament indicators. Will be ordered from 0 to T-1.
+#' @param y Vector of outcomes
+#' @param pl If TRUE Post-Lasso is used to estimate nuisance parameters, if FALSE Lasso
+#' @param cs If TRUE, common support will be checked
+#' @param q Quantile used for enforcing common support
+#' @param cl Vector with cluster variables can be provided
+#' @param print If TRUE, supporting information is printed
+#' @param se_rule If not NULL, define, e.g., c(-1,1) to get 1SE and 1SE+ rule
+#' @param w If TRUE, implied weights are calculated (only if pl=TRUE)
+#' @param parallel If TRUE, cross-validation of \code{\link{post_lasso_cv}} parallelized
+#' @param ... Pass \code{\link{glmnet}} and \code{\link{post_lasso_cv}} options
+#'
+#' @return \code{gps_prep} returns a list containing a N x # of treatments matrix
+#'          with generalized propensity scores (\code{p}) and a boolean indicating common
+#'          and a boolean indicating common support (\code{cs}).
+#' @export
+
+dmlmt <- function(x,t,y,pl=TRUE,cs=TRUE,q=1,cl=NULL,print=FALSE,se_rule = NULL,w=FALSE,parallel=FALSE,...) {
+
+  # Checks
+  if (!isTRUE(pl) & !is.null(se_rule)) stop("Different standard error rules only implemented for Post-Lasso")
+  if (!is.null(se_rule) & !(is.numeric(se_rule))) stop("Please provide numeric SE rules (e.g. c(-1,1))")
+  if (!isTRUE(pl) & isTRUE(parallel)) warning("Parallelization currently not implemented for Lasso"); parallel=FALSE
+
+  # Important parameters
+  n <- length(y)
+  num_t <- length(table(t))
+
+  # Check whether treatment is binary or multiple
+  binary <- all(t %in% 0:1)
+
+  SE_rule <- NULL
+  if (!is.null(se_rule)) l_se_d <- vector("list",num_t)
+  if (!is.null(se_rule)) l_se_y <- vector("list",num_t)
+
+  if (binary) {
+    cat("\n Binary treatment\n\n")
+    t_mat <- cbind(1-t,t)
+    if (isTRUE(pl)) {
+      sel_d <- post_lasso_cv(x,t,family = "binomial",output=print,se_rule=se_rule,parallel=parallel,...)
+      l_nm_d <- list(sel_d$names_pl[-1],sel_d$names_pl[-1])
+      if (!is.null(se_rule)) l_se_d <- list(sel_d$names_Xse_pl,sel_d$names_Xse_pl)
+      gps <- gps_prep(x,t_mat,l_nm_d,cs=cs,q=q,print=print)
+
+      # Post-Lasso OLS for mu(x)
+      sel_y0 <- post_lasso_cv(x[t==0,],y[t==0],output=print,se_rule=se_rule,parallel=parallel,...)
+      sel_y1 <- post_lasso_cv(x[t==1,],y[t==1],output=print,se_rule=se_rule,parallel=parallel,...)
+      l_nm_y <- list(sel_y0$names_pl[-1], sel_y1$names_pl[-1])
+      if (!is.null(se_rule)) l_se_y <- list(sel_y0$names_Xse_pl,sel_y1$names_Xse_pl)
+      y_mat <- y_prep(x,t_mat,y,l_nm_y)
+
+    } else {
+      cvfit_p <- cv.glmnet(x,t, family = "binomial",parallel=parallel,...)
+      ps_mat <- predict(cvfit_p, x, s = "lambda.min", type = "response")
+      ps_mat <- cbind(1-ps_mat,ps_mat)
+      gps <- gps_cs(ps_mat,t_mat,cs=cs,q=q,print=print)
+
+      y_mat <- matrix(NA,n,num_t)
+      for (tr in 1:num_t) {
+        cvfit_y <- cv.glmnet(x[t_mat[,tr]==1,],y[t_mat[,tr]==1],parallel=parallel,...)
+        y_mat[,tr] <- predict(cvfit_y, x, s = "lambda.min")
+      }
+    }
+  }  else { # end binary
+    cat("\n Multiple treatment\n\n")
+    t_mat <- matrix(NA,n,num_t)
+    values <- as.numeric(names(table(t)))
+    for (tr in 1:num_t){
+      t_mat[,tr] <- as.numeric(t == values[tr])
+    }
+
+    if (isTRUE(pl)) {
+      list_t <- vector("list",num_t)
+      l_nm_y <- vector("list",num_t)
+
+      for (tr in 1:num_t){
+        sel_d <- post_lasso_cv(x,t_mat[,tr],family = "binomial",output=print,se_rule=se_rule,parallel=parallel,...)
+        list_t[[tr]] <- sel_d$names_pl[-1]
+        if (!is.null(se_rule)) l_se_d[[tr]] <- sel_d$names_Xse_pl
+        sel_y <- post_lasso_cv(x[t_mat[,tr]==1,],y[t_mat[,tr]==1],output=print,se_rule=se_rule,parallel=parallel,...)
+        l_nm_y[[tr]] <- sel_y$names_pl[-1]
+        if (!is.null(se_rule)) l_se_y[[tr]] <- sel_y$names_Xse_pl
+      }
+      gps <- gps_prep(x,t_mat,list_t,cs=cs,q=q,print=print)
+      y_mat <- y_prep(x,t_mat,y,l_nm_y)
+    } else {
+      ps_mat <- matrix(NA,n,num_t)
+      y_mat <- matrix(NA,n,num_t)
+      for (tr in 1:num_t){
+        cvfit_p <- cv.glmnet(x,t_mat[,tr], family = "binomial",...)
+        ps_mat[,tr] <- predict(cvfit_p, x, s = "lambda.min", type = "response")
+        cvfit_y <- cv.glmnet(x[t_mat[,tr]==1,],y[t_mat[,tr]==1],parallel=parallel,...)
+        y_mat[,tr] <- predict(cvfit_y, x, s = "lambda.min")
+      }
+      gps <- gps_cs(ps_mat,t_mat,cs=cs,q=q,print=print)
+    }
+  }
+
+  # Potential outcomes
+  PO <- PO_dmlmt(t_mat,y,y_mat,gps$p,cs_i=gps$cs,cl=cl)
+  # ATE
+  ATE <- TE_dmlmt(PO$mu,gps$cs,cl=cl)
+
+  # Calculate the weights
+  if (isTRUE(w)) weights <- rowSums(PO_dmlmt_w(x,t_mat,y,gps$p,l_nm_y,gps$cs)$w_dml)
+
+
+  ### Different penalty term rules
+  if (!is.null(se_rule)) {
+    TE <- matrix(NA,nrow(ATE),length(se_rule))
+    SE <- matrix(NA,nrow(ATE),length(se_rule))
+    rownames(TE) <- rownames(ATE)
+    rownames(SE) <- rownames(ATE)
+    colnames(TE) <- names(sel_d$names_Xse_pl)
+    colnames(SE) <- names(sel_d$names_Xse_pl)
+
+    for (s in 1:length(se_rule)) {
+      cat("\n\nSE rule used:",names(sel_d$names_Xse_pl)[s],"\n")
+      list_se_d <- vector("list",num_t)
+      list_se_y <- vector("list",num_t)
+      for (tr in 1:num_t) {
+        list_se_d[[tr]] <- l_se_d[[tr]][[s]][-1]
+        list_se_y[[tr]] <- l_se_y[[tr]][[s]][-1]
+      }
+      se_gps <- gps_prep(x,t_mat,list_se_d,print=F)
+      se_y_mat <- y_prep(x,t_mat,y,list_se_y)
+
+      se_PO <- PO_dmlmt(t_mat,y,se_y_mat,se_gps$p,cs_i=se_gps$cs,cl=cl)
+      se_ATE <- TE_dmlmt(se_PO$mu,se_gps$cs,cl=cl)
+      TE[,s] <- se_ATE[,1,drop=F]
+      SE[,s] <- se_ATE[,2,drop=F]
+    }
+    # Save treatment effects and standard errors
+    TE <- cbind(TE[,se_rule<0,drop=F],ATE[,1,drop=F],TE[,se_rule>0,drop=F])
+    colnames(TE)[sum(se_rule<0)+1] <- "Min"
+    SE <- cbind(SE[,se_rule<0,drop=F],ATE[,2,drop=F],SE[,se_rule>0,drop=F])
+    colnames(SE)[sum(se_rule<0)+1] <- "Min"
+    SE_rule <- list(TE,SE)
+  }
+
+  ## Return results
+  list("ATE" = ATE,"PO" = PO$results,"SE_rule"=SE_rule,"weights"=weights)
+}
+
+
+
 #' This function prepares the (generalized) propensity scores
 #' and checks the common support after variable selection.
 #'
@@ -33,13 +183,13 @@ gps_prep <- function(x,t,nm_list,cs=TRUE,q=1,print=TRUE) {
 
   for (i in 1:num_t) {
     xx <- add_intercept(x[,nm_list[[i]],drop=F])
-    fit_val <- glm.fit(xx,t[,i],family=binomial(link="logit"))
+    fit_val <- stats::glm.fit(xx,t[,i],family=binomial(link="logit"))
     if (!fit_val$converged) warning("Logit did not converge: GPS might be implausible, check!", call. = FALSE)
     p_mat[,i] <- fit_val$fitted.values
 
     for (j in 1:num_t) {
-      minmax[1,j] <- quantile(p_mat[t[,j]==1,i],1-q)
-      minmax[2,j] <- quantile(p_mat[t[,j]==1,i],q)
+      minmax[1,j] <- stats::quantile(p_mat[t[,j]==1,i],1-q)
+      minmax[2,j] <- stats::quantile(p_mat[t[,j]==1,i],q)
     }
     cs_mat[,i] <- (p_mat[,i] < max(minmax[1,]) | p_mat[,i] > min(minmax[2,]))
   }
@@ -72,13 +222,14 @@ gps_prep <- function(x,t,nm_list,cs=TRUE,q=1,print=TRUE) {
 #'          each column contains a binary indicator for each tratment
 #' @param q Quantile used for enforcing common support
 #' @param print If TRUE, descriptives for p-scores and common support shown
+#' @param cs If TRUE common support enforced, if FALSE only boolean vector added
 #' @import psych
 #' @return \code{gps_cs} returns a list containing a N x # of treatments matrix
 #'          with generalized propensity scores (\code{p}) and a boolean indicating common
 #'          and a boolean indicating common support (\code{cs}).
 #' @export
 
-gps_cs <- function(p_mat,t,q=1,print=TRUE) {
+gps_cs <- function(p_mat,t,q=1,print=TRUE,cs=TRUE) {
   # Retrieve important info
   n <- nrow(p_mat)
   num_t <- ncol(t)
@@ -89,21 +240,24 @@ gps_cs <- function(p_mat,t,q=1,print=TRUE) {
 
   for (i in 1:num_t) {
     for (j in 1:num_t) {
-      minmax[1,j] <- quantile(p_mat[t[,j]==1,i],1-q)
-      minmax[2,j] <- quantile(p_mat[t[,j]==1,i],q)
+      minmax[1,j] <- stats::quantile(p_mat[t[,j]==1,i],1-q)
+      minmax[2,j] <- stats::quantile(p_mat[t[,j]==1,i],q)
     }
     cs_mat[,i] <- (p_mat[,i] < max(minmax[1,]) | p_mat[,i] > min(minmax[2,]))
   }
 
   cs_ind <- rep(TRUE,n)
-  cs_ind <- !apply(cs_mat,1,any)
+  if (isTRUE(cs)) cs_ind <- !apply(cs_mat,1,any)
 
   if (isTRUE(print)) {
     cat("\n\nPscores\n")
     print(psych::describe(p_mat))
-    cat("\nOff support\n", toString(sum(!cs_ind)))
-    cat("\n\nPscores on support\n")
-    print(psych::describe(p_mat[cs_ind,]))
+
+    if (isTRUE(cs)) {
+      cat("\nOff support\n", toString(sum(!cs_ind)))
+      cat("\n\nPscores on support\n")
+      print(psych::describe(p_mat[cs_ind,]))
+    }
   }
 
   list("p"=p_mat,"cs"=cs_ind)
@@ -191,7 +345,7 @@ PO_dmlmt <- function(t,y,y_mat,p_mat,cs_i=NULL,cl=NULL,print=TRUE) {
   }
 
   # Calculate Mean PO
-  res[,1] <- Matrix::colMeans(mu_mat,na.rm=TRUE)
+  res[,1] <- colMeans(mu_mat,na.rm=TRUE)
 
   # Calculate SE for PO
   if (is.null(cl)) {
@@ -204,7 +358,10 @@ PO_dmlmt <- function(t,y,y_mat,p_mat,cs_i=NULL,cl=NULL,print=TRUE) {
     }
   }
 
-  if (isTRUE(print)) printCoefmat(res)
+  if (isTRUE(print)) {
+    cat("\n\n Potential outcomes:\n")
+    stats::printCoefmat(res)
+  }
 
   list("results"=res,"mu"=mu_mat)
 }
@@ -243,7 +400,7 @@ PO_dmlmt_w <- function(x,t,y,p_mat,nm_list,cs_i=NULL,cl=NULL) {
   for (i in 1:num_t) {
     xx <- add_intercept(x[,nm_list[[i]],drop=FALSE])
     # Remove multicollinear
-    coef <- glm.fit(xx[t[,i]==1,],y[t[,i]==1,])$coefficients
+    coef <- stats::glm.fit(xx[t[,i]==1,],y[t[,i]==1,])$coefficients
     # Check for NA coefficients
     if (any(is.na(coef)) == TRUE) {
       xx <- xx[,!is.na(coef),drop=F]
@@ -285,6 +442,16 @@ PO_dmlmt_w <- function(x,t,y,p_mat,nm_list,cs_i=NULL,cl=NULL) {
 #' @param cs_i If not NULL, boolean vector to indicate that observation is on support
 #'
 #' @return Vector of weights
+#' @example
+#' # Also possible to enter previously calculated Nt x N weight matrix (e.g. from Random forest)
+#' \dontrun{
+#' w_dml <- rep(0,length(Y))
+#' for (i in 1:ncol(D_mat)) {
+#'   OLSw <- OLS_pred_w(add_intercept(X[,l_nm_y[[i]]]),D_mat[,i],Y,gps$cs)
+#'   w_dml <- w_dml + PO_dmlmt_w_gen(OLSw,D_mat[,i],Y,gps$p[,i],gps$cs)
+#' }
+#' }
+#'
 #' @export
 
 
@@ -299,7 +466,7 @@ OLS_pred_w <- function(x,t,y,cs_i=NULL) {
   w_mat <- matrix(0,n_t,n)
 
   # Remove multicollinear
-  coef <- glm.fit(x[t==1,],y[t==1,])$coefficients
+  coef <- stats::glm.fit(x[t==1,],y[t==1,])$coefficients
   if (any(is.na(coef)) == TRUE) {
     x <- x[,!is.na(coef),drop=F]
   }
@@ -404,11 +571,11 @@ TE_dmlmt <- function(mu,cs_i=NULL,print=TRUE,cl=NULL) {
   # t-stat
   res[,3] <- res[,1] / res[,2]
   # p-value
-  res[,4] <- 2 * pt(abs(res[,3]),n,lower = FALSE )
+  res[,4] <- 2 * stats::pt(abs(res[,3]),n,lower = FALSE )
 
   if (isTRUE(print)) {
     cat("\nAverage effects\n")
-    printCoefmat(res,has.Pvalue = TRUE)
+    stats::printCoefmat(res,has.Pvalue = TRUE)
     cat("\n# of obs on / off support:",toString(sum(cs_i))," / ",toString(sum(!cs_i)) ,"\n")
   }
   return(res)
