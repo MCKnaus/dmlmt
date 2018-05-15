@@ -17,9 +17,8 @@
 #' @param parallel If TRUE, cross-validation of \code{\link{post_lasso_cv}} parallelized
 #' @param ... Pass \code{\link{glmnet}} and \code{\link{post_lasso_cv}} options
 #'
-#' @return \code{gps_prep} returns a list containing a N x # of treatments matrix
-#'          with generalized propensity scores (\code{p}) and a boolean indicating common
-#'          and a boolean indicating common support (\code{cs}).
+#' @return \code{dmlmt} returns the results of the estimated average treatment effects and the potential outcomes. If specified, results of different SE rules and implied weights are returned.
+#'
 #' @export
 
 dmlmt <- function(x,t,y,pl=TRUE,cs=TRUE,q=1,cl=NULL,print=FALSE,se_rule = NULL,w=FALSE,parallel=FALSE,...) {

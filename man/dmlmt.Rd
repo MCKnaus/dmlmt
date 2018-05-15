@@ -33,9 +33,7 @@ dmlmt(x, t, y, pl = TRUE, cs = TRUE, q = 1, cl = NULL, print = FALSE,
 \item{...}{Pass \code{\link{glmnet}} and \code{\link{post_lasso_cv}} options}
 }
 \value{
-\code{gps_prep} returns a list containing a N x # of treatments matrix
-         with generalized propensity scores (\code{p}) and a boolean indicating common
-         and a boolean indicating common support (\code{cs}).
+\code{dmlmt} returns the results of the estimated average treatment effects and the potential outcomes. If specified, results of different SE rules and implied weights are returned.
 }
 \description{
 This function estimates treatment effects for binary and multiple treatments
