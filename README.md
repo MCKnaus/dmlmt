@@ -97,4 +97,4 @@ Chernozhukov, V., Hansen, C., & Spindler, M. (2016). *High-Dimensional Metrics i
 Farrell, M. H. (2015). Robust inference on average treatment effects with possibly more covariates than observations. *Journal of Econometrics*, 189(1), 1-23.
 
 Knaus, M. C. (2018). A Double Machine Learning Approach to Estimate the Effects of Musical Practice on
-Student's Skills, in preparation.
+Student's Skills, [arXiv](https://arxiv.org/abs/1805.10300)
