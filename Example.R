@@ -46,6 +46,7 @@ se_rules <- c(-1,-.5,.5,1)
 ext_pl_bin <- dmlmt(X,D,Y,se_rule=se_rules,w=TRUE)
 
 # Example how to plot the results
+library(ggplot2)
 df <- data.frame(SE_rule = factor(colnames(ext_pl_bin$SE_rule[[1]])
                                   ,levels = colnames(ext_pl_bin$SE_rule[[1]]))
                  ,coef = ext_pl_bin$SE_rule[[1]][1,],se = ext_pl_bin$SE_rule[[2]][1,])
@@ -61,3 +62,31 @@ plot <- love.plot(balance,abs = TRUE, line=TRUE, var.order="unadjusted")
 # Multiple
 ext_pl_mult <- dmlmt(X,D_mult,Y,se_rule=se_rules,w=TRUE)
 
+
+#################################
+###     Generic ML input      ###
+#################################
+
+# Example with Random Forest instead of Lasso
+library(grf)
+
+# Initialize vector nuisance matrix
+values <- sort(unique(D_mult))
+ps_mat <- t_mat <- y_mat <- matrix(NA,length(Y),length(values))
+
+# Get nuisance parameter predictions
+for (tr in 1:length(values)){
+  t_mat[,tr] <- as.numeric(D_mult == values[tr])
+  rf_p <- regression_forest(X,t_mat[,tr])
+  ps_mat[,tr] <- predict(rf_p, X)$predictions
+  rf_y <- regression_forest(X[t_mat[,tr] == 1,],Y[t_mat[,tr] == 1])
+  y_mat[,tr] <- predict(rf_y, X)$predictions
+}
+
+# Calculate generalized p-score and enforce common support
+rf_gps <- gps_cs(ps_mat,t_mat)
+
+# Potential outcomes
+rf_PO <- PO_dmlmt(t_mat,Y,y_mat,rf_gps$p,cs_i=rf_gps$cs)
+# ATE
+rf_ATE <- TE_dmlmt(rf_PO$mu,rf_gps$cs)
