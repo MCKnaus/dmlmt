@@ -482,7 +482,7 @@ CV_core <- function(x,y,w,d,cvgroup,list,i,lambda,family,...) {
         }
 
         # If ok run logit and get coefficients
-        coef_logit <- lrm.fit(x_logit,y_est_cv,weights = w_est_cv,tol=1e-30)$coefficients
+        coef_logit <- rms::lrm.fit(x_logit,y_est_cv,weights = w_est_cv,tol=1e-30)$coefficients
 
         if (is.null(coef_logit) & j==1) {
           fit_post_lasso[,j] = rep(mean(y_est_cv == 1),nrow(fit_post_lasso))

@@ -93,7 +93,7 @@ The package allows to create predictions for the nuisance parameters from any ma
 ```R
 library(grf)
 
-# Initialize vector nuisance matrix
+# Initialize nuisance matrices
 values <- sort(unique(D_mult))
 ps_mat <- t_mat <- y_mat <- matrix(NA,length(Y),length(values))
 

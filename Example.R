@@ -70,7 +70,7 @@ ext_pl_mult <- dmlmt(X,D_mult,Y,se_rule=se_rules,w=TRUE)
 # Example with Random Forest instead of Lasso
 library(grf)
 
-# Initialize vector nuisance matrix
+# Initialize nuisance matrices
 values <- sort(unique(D_mult))
 ps_mat <- t_mat <- y_mat <- matrix(NA,length(Y),length(values))
 
@@ -90,3 +90,19 @@ rf_gps <- gps_cs(ps_mat,t_mat)
 rf_PO <- PO_dmlmt(t_mat,Y,y_mat,rf_gps$p,cs_i=rf_gps$cs)
 # ATE
 rf_ATE <- TE_dmlmt(rf_PO$mu,rf_gps$cs)
+
+
+source("D:/Switch/R programs/dmlmt/R/dmlmt.R")
+source("D:/Switch/R programs/dmlmt/R/post_lasso_cv.R")
+
+library(glmnet, rms)
+
+Y_bin <- as.numeric(Y > median(Y))
+
+stand_pl_mult <- dmlmt(X,D_mult,Y_bin)
+stand_l_mult <- dmlmt(X,D_mult,Y_bin,pl=FALSE)
+
+stand_pl_mult <- dmlmt(X,D_mult,Y_bin,family="binomial")
+stand_l_mult <- dmlmt(X,D_mult,Y_bin,family="binomial",pl=FALSE)
+
+

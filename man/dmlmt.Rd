@@ -4,8 +4,9 @@
 \alias{dmlmt}
 \title{Double machine learning for binary and multiple treatments'}
 \usage{
-dmlmt(x, t, y, pl = TRUE, cs = TRUE, q = 1, cl = NULL, print = FALSE,
-  se_rule = NULL, w = FALSE, parallel = FALSE, ...)
+dmlmt(x, t, y, family = "gaussian", pl = TRUE, cs = TRUE, q = 1,
+  cl = NULL, print = FALSE, se_rule = NULL, w = FALSE,
+  parallel = FALSE, ...)
 }
 \arguments{
 \item{x}{Matrix of covariates (N x p matrix)}
@@ -13,6 +14,8 @@ dmlmt(x, t, y, pl = TRUE, cs = TRUE, q = 1, cl = NULL, print = FALSE,
 \item{t}{Vector of treament indicators. Will be ordered from 0 to T-1.}
 
 \item{y}{Vector of outcomes}
+
+\item{family}{Outcome type. Default is \code{"gaussian"}. For binary outcomes choose \code{"binomial"}.}
 
 \item{pl}{If TRUE Post-Lasso is used to estimate nuisance parameters, if FALSE Lasso}
 

@@ -7,6 +7,7 @@
 #' @param x Matrix of covariates (N x p matrix)
 #' @param t Vector of treament indicators. Will be ordered from 0 to T-1.
 #' @param y Vector of outcomes
+#' @param family Outcome type. Default is \code{"gaussian"}. For binary outcomes choose \code{"binomial"}.
 #' @param pl If TRUE Post-Lasso is used to estimate nuisance parameters, if FALSE Lasso
 #' @param cs If TRUE, common support will be checked
 #' @param q Quantile used for enforcing common support
@@ -21,7 +22,8 @@
 #'
 #' @export
 
-dmlmt <- function(x,t,y,pl=TRUE,cs=TRUE,q=1,cl=NULL,print=FALSE,se_rule = NULL,w=FALSE,parallel=FALSE,...) {
+dmlmt <- function(x,t,y,family="gaussian",pl=TRUE,cs=TRUE,q=1,cl=NULL,print=FALSE,se_rule = NULL,w=FALSE,
+                  parallel=FALSE,...) {
 
   # Checks
   if (!isTRUE(pl) & !is.null(se_rule)) stop("Different standard error rules only implemented for Post-Lasso")
@@ -49,8 +51,8 @@ dmlmt <- function(x,t,y,pl=TRUE,cs=TRUE,q=1,cl=NULL,print=FALSE,se_rule = NULL,w
       gps <- gps_prep(x,t_mat,l_nm_d,cs=cs,q=q,print=print)
 
       # Post-Lasso OLS for mu(x)
-      sel_y0 <- post_lasso_cv(x[t==0,],y[t==0],output=print,se_rule=se_rule,parallel=parallel,...)
-      sel_y1 <- post_lasso_cv(x[t==1,],y[t==1],output=print,se_rule=se_rule,parallel=parallel,...)
+      sel_y0 <- post_lasso_cv(x[t==0,],y[t==0],family = family,output=print,se_rule=se_rule,parallel=parallel,...)
+      sel_y1 <- post_lasso_cv(x[t==1,],y[t==1],family = family,output=print,se_rule=se_rule,parallel=parallel,...)
       l_nm_y <- list(sel_y0$names_pl[-1], sel_y1$names_pl[-1])
       if (!is.null(se_rule)) l_se_y <- list(sel_y0$names_Xse_pl,sel_y1$names_Xse_pl)
       y_mat <- y_prep(x,t_mat,y,l_nm_y)
@@ -63,8 +65,8 @@ dmlmt <- function(x,t,y,pl=TRUE,cs=TRUE,q=1,cl=NULL,print=FALSE,se_rule = NULL,w
 
       y_mat <- matrix(NA,n,num_t)
       for (tr in 1:num_t) {
-        cvfit_y <- cv.glmnet(x[t_mat[,tr]==1,],y[t_mat[,tr]==1],parallel=parallel,...)
-        y_mat[,tr] <- predict(cvfit_y, x, s = "lambda.min")
+        cvfit_y <- cv.glmnet(x[t_mat[,tr]==1,],y[t_mat[,tr]==1],family = family,parallel=parallel,...)
+        y_mat[,tr] <- predict(cvfit_y, x, s = "lambda.min", type = "response")
       }
     }
   }  else { # end binary
@@ -83,7 +85,7 @@ dmlmt <- function(x,t,y,pl=TRUE,cs=TRUE,q=1,cl=NULL,print=FALSE,se_rule = NULL,w
         sel_d <- post_lasso_cv(x,t_mat[,tr],family = "binomial",output=print,se_rule=se_rule,parallel=parallel,...)
         list_t[[tr]] <- sel_d$names_pl[-1]
         if (!is.null(se_rule)) l_se_d[[tr]] <- sel_d$names_Xse_pl
-        sel_y <- post_lasso_cv(x[t_mat[,tr]==1,],y[t_mat[,tr]==1],output=print,se_rule=se_rule,parallel=parallel,...)
+        sel_y <- post_lasso_cv(x[t_mat[,tr]==1,],y[t_mat[,tr]==1],family = family,output=print,se_rule=se_rule,parallel=parallel,...)
         l_nm_y[[tr]] <- sel_y$names_pl[-1]
         if (!is.null(se_rule)) l_se_y[[tr]] <- sel_y$names_Xse_pl
       }
@@ -95,8 +97,8 @@ dmlmt <- function(x,t,y,pl=TRUE,cs=TRUE,q=1,cl=NULL,print=FALSE,se_rule = NULL,w
       for (tr in 1:num_t){
         cvfit_p <- cv.glmnet(x,t_mat[,tr], family = "binomial",...)
         ps_mat[,tr] <- predict(cvfit_p, x, s = "lambda.min", type = "response")
-        cvfit_y <- cv.glmnet(x[t_mat[,tr]==1,],y[t_mat[,tr]==1],parallel=parallel,...)
-        y_mat[,tr] <- predict(cvfit_y, x, s = "lambda.min")
+        cvfit_y <- cv.glmnet(x[t_mat[,tr]==1,],y[t_mat[,tr]==1],family = family,parallel=parallel,...)
+        y_mat[,tr] <- predict(cvfit_y, x, s = "lambda.min", type = "response")
       }
       gps <- gps_cs(ps_mat,t_mat,cs=cs,q=q,print=print)
     }
