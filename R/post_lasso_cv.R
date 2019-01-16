@@ -13,14 +13,15 @@
 #' @param parallel If TRUE, cross-validation parallelized
 #' @param graph_file Option to define path to save graph
 #' @param se_rule If not NULL, define, e.g., c(-1,1) to get 1SE and 1SE+ rule
+#' @param progress Shows progress bar
 #' @param ... Pass \code{\link{glmnet}} options
-#' @import glmnet rms doParallel doSNOW
+#' @import glmnet rms doParallel doSNOW plyr
 #'
-#' @return List with the names of selected variables at cross-validated minima for Lasso and Post-Lasso
+#' @return List with the names of selected variables at CV minimum and the SE rules if chosen as well as list Lasso and Post-Lasso coefficients at cross-validated minimum
 #' @export
 
 post_lasso_cv <- function(x,y,w=NULL,kf = 10,family="gaussian", seed=NULL,output = TRUE,
-                          d=NULL,parallel=FALSE,graph_file=NULL,se_rule = NULL,...) {
+                          d=NULL,parallel=FALSE,graph_file=NULL,se_rule = NULL,progress=F,...) {
 
   # Create weights of ones if no weights are specified
   if (is.null(w)) {
@@ -82,7 +83,7 @@ post_lasso_cv <- function(x,y,w=NULL,kf = 10,family="gaussian", seed=NULL,output
   if (parallel==FALSE) {
 
     ## Creating progress bar to get status of CV
-    if (output ==  TRUE) {
+    if (progress ==  TRUE) {
 
       print(paste("Progress of",toString(kf),"fold cross-validation:"))
       progress.bar <- plyr::create_progress_bar("text")
@@ -100,7 +101,7 @@ post_lasso_cv <- function(x,y,w=NULL,kf = 10,family="gaussian", seed=NULL,output
       cv_MSE_post_lasso[i,] <- CV$MSE_post_lasso
 
       ## Update progress bar
-      if (output ==  TRUE) progress.bar$step()
+      if (progress ==  TRUE) progress.bar$step()
 
     }       # end loop over folds
 
@@ -122,7 +123,7 @@ post_lasso_cv <- function(x,y,w=NULL,kf = 10,family="gaussian", seed=NULL,output
     para_res <- foreach (i = 1:kf, .combine="rbind", .multicombine=TRUE, .packages=c("psych","glmnet","tcltk","RandomFieldsUtils","rms")
                          ,.export=c("CV_core","norm_w_to_n","fitted_values","add_intercept"),.inorder=FALSE) %dopar% {
 
-                           if (output ==  TRUE) {
+                           if (progress ==  TRUE) {
                              if(!exists("pb")) pb <- tkProgressBar(title="CV progress", min=1, max=kf)
                            }
 
@@ -133,7 +134,7 @@ post_lasso_cv <- function(x,y,w=NULL,kf = 10,family="gaussian", seed=NULL,output
                            cv_MSE_lasso <- CV$MSE_lasso
                            cv_MSE_post_lasso <- CV$MSE_post_lasso
 
-                           if (output ==  TRUE) setTkProgressBar(pb, i)
+                           if (progress ==  TRUE) setTkProgressBar(pb, i)
 
                            ## Matrices to be returned from cores
                            return(list(as.matrix(cv_MSE_lasso),as.matrix(cv_MSE_post_lasso)))
