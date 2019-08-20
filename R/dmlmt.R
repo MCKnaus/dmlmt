@@ -326,7 +326,7 @@ PO_dmlmt <- function(t,y,y_mat,p_mat,cs_i=NULL,cl=NULL,print=TRUE) {
   # Retrieve important info
   n <- nrow(t)
   num_t <- ncol(t)
-  if (is.null(cs_i)) rep(TRUE,n)
+  if (is.null(cs_i)) cs_i = rep(TRUE,n)
 
   # Initialize matrices
   w_ipw <- matrix(0,n,num_t)
@@ -351,11 +351,11 @@ PO_dmlmt <- function(t,y,y_mat,p_mat,cs_i=NULL,cl=NULL,print=TRUE) {
   # Calculate SE for PO
   if (is.null(cl)) {
     for (i in 1:num_t) {
-      res[i,2] <- sqrt(mean((mu_mat[cs_i,i] - mean(mu_mat[cs_i,i]))^2) / n)
+      res[i,2] <- sqrt(mean((mu_mat[cs_i,i] - mean(mu_mat[cs_i,i]))^2) / sum(cs_i))
     }
   } else {
     for (i in 1:num_t) {
-      res[i,2] <- sqrt(sum(tapply(mu_mat[cs_i,i] - mean(mu_mat[cs_i,i]), cl[cs_i], sum)^2) / n^2)
+      res[i,2] <- sqrt(sum(tapply(mu_mat[cs_i,i] - mean(mu_mat[cs_i,i]), cl[cs_i], sum)^2) / sum(cs_i)^2)
     }
   }
 
@@ -511,8 +511,8 @@ PO_dmlmt_w_gen <- function(yw_mat,t,y,p,cs_i=NULL) {
   w_ipw[cs_i,1] <- as.matrix(t[cs_i,1] / p[cs_i],ncol=1)
   w_ipw[cs_i,1] <- norm_w_to_n(w_ipw[cs_i,1,drop=F])
 
-  w_ols <- as.matrix(rep(0,n))
-  w_ols[t==1,] <- rowSums(yw_mat)
+  w_y <- as.matrix(rep(0,n))
+  w_y[t==1,] <- rowSums(yw_mat)
 
   for (r in 1:n) {
     if (cs_i[r]==TRUE) {
@@ -521,9 +521,9 @@ PO_dmlmt_w_gen <- function(yw_mat,t,y,p,cs_i=NULL) {
   }
 
   # Calculate weight matrix
-  w_mat <- w_ipw + rowSums(w_ols) - w_adj
+  w_mat <- w_ipw + rowSums(w_y) - w_adj
 
-  return(w_mat)
+  list("w_dml"=w_mat,"w_y"=w_y,"w_ipw"=w_ipw,"w_adj"=w_adj)
 }
 
 

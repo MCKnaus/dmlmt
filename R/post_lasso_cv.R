@@ -5,7 +5,7 @@
 #' @param y vector of outcomes
 #' @param w vector of weights
 #' @param kf number of folds in k-fold CV
-#' @param family Outcome family, currenlty "gaussian" and "binomial" supported
+#' @param family Outcome family, currently "gaussian" and "binomial" supported
 #' @param seed CV samples are drawn starting with a specified seed
 #' @param output If TRUE, output and graphs are printed
 #' @param d vector with binary treatment indicator, if not NULL,
@@ -13,7 +13,7 @@
 #' @param parallel If TRUE, cross-validation parallelized
 #' @param graph_file Option to define path to save graph
 #' @param se_rule If not NULL, define, e.g., c(-1,1) to get 1SE and 1SE+ rule
-#' @param progress Shows progress bar
+#' @param progress Shows progress bar if TRUE
 #' @param ... Pass \code{\link{glmnet}} options
 #' @import glmnet rms doParallel doSNOW plyr
 #'
