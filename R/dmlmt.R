@@ -559,9 +559,9 @@ TE_dmlmt <- function(mu,cs_i=NULL,print=TRUE,cl=NULL) {
       eif_i <- mu[cs_i,j] - mu[cs_i,i]
       res[pos,1] <- mean(eif_i)
       if (is.null(cl)) {
-        res[pos,2] <- sqrt(mean((eif_i-mean(eif_i))^2) / n)
+        res[pos,2] <- sqrt(mean((eif_i-mean(eif_i))^2) / sum(cs_i))
       } else {
-        res[pos,2] <-  sqrt(sum(tapply(eif_i - mean(eif_i), cl[cs_i], sum)^2) / n^2)
+        res[pos,2] <-  sqrt(sum(tapply(eif_i - mean(eif_i), cl[cs_i], sum)^2) / sum(cs_i)^2)
       }
 
       rownames(res)[pos] <- paste0(nm_t[j]," - ",nm_t[i])
