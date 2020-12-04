@@ -3,7 +3,7 @@ Double Machine Learning for Multiple Treatments
 
 This code implements the Double Machine Learning approach (Chernozhukov et al., 2018) 
 for multiple treatments following Farrell (2015). 
-With modifications for sensitivity analysis and balancing checks as described and applied in Knaus (2018). 
+With modifications for sensitivity analysis and balancing checks as described and applied in Knaus (2020). 
 The cross-validated Post-Lasso is based on the [glmnet](https://github.com/cran/glmnet) package.
 
 ## Example
@@ -124,5 +124,5 @@ Chernozhukov, V., Hansen, C., & Spindler, M. (2016). *High-Dimensional Metrics i
 
 Farrell, M. H. (2015). Robust inference on average treatment effects with possibly more covariates than observations. *Journal of Econometrics*, 189(1), 1-23.
 
-Knaus, M. C. (2018). A Double Machine Learning Approach to Estimate the Effects of Musical Practice on
-Student's Skills, [arXiv](https://arxiv.org/abs/1805.10300)
+Knaus, M. C. (2020). [A double machine learning approach to estimate the effects of musical practice on
+student's skills](https://rss.onlinelibrary.wiley.com/doi/full/10.1111/rssa.12623). *Journal of the Royal Statistical Society: Series A*
